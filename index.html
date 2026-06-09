@@ -72,17 +72,16 @@
             const sub = document.getElementById("subCategory").value;
             const col = document.getElementById("color").value;
             
-            // 귀찮은 입력창 대신 선택한 정보 조합으로 이름 자동 생성!
             const fullClothText = `[${main}] ${col} ${sub}`;
 
-            // 1. 파이어베이스에 데이터 저장
+            // 1. 파이어베이스 데이터베이스 저장
             db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: sub }, function(err) {
                 if(!err) { 
                     alert("의류가 옷장에 등록되었으며 코디 리스트에 즉시 반영되었습니다!"); 
                 }
             });
 
-            // 2. 오른쪽 매칭 리스트에 바로 추가하기
+            // 2. 오른쪽 매칭 리스트에 즉시 추가
             selectedClothes.push(fullClothText);
             updateSelectedUI();
         }
