@@ -23,6 +23,7 @@
                     <select id="subCategory" class="p-2 border rounded-lg bg-white"><option>반팔 티셔츠</option><option>셔츠</option><option>청바지</option><option>슬랙스</option></select>
                     <select id="color" class="p-2 border rounded-lg bg-white"><option>화이트</option><option>블랙</option><option>네이비</option><option>그레이</option></select>
                 </div>
+                <input type="text" id="brandName" placeholder="브랜드 이름 입력 (예: 나이키)" class="w-full p-2 text-xs border rounded-lg">
                 <button onclick="addClothAndSelect()" class="w-full bg-indigo-600 text-white text-xs font-bold p-3 rounded-lg hover:bg-indigo-700 shadow-sm">
                     내 옷장에 저장
                 </button>
@@ -71,13 +72,17 @@
             const main = document.getElementById("mainCategory").value;
             const sub = document.getElementById("subCategory").value;
             const col = document.getElementById("color").value;
+            const brand = document.getElementById("brandName").value.trim();
             
-            const fullClothText = `[${main}] ${col} ${sub}`;
+            // 브랜드 입력 여부에 따라 이름 조립 (예: [상의] 화이트 나이키 반팔 티셔츠)
+            const brandText = brand ? brand + " " : "";
+            const fullClothText = `[${main}] ${col} ${brandText}${sub}`;
 
-            // 파이어베이스 데이터베이스 저장
-            db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: sub }, function(err) {
+            // 파이어베이스 데이터베이스 저장 (브랜드명을 name 필드에 포함하여 저장)
+            db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: brandText + sub }, function(err) {
                 if(!err) { 
                     alert("의류가 옷장에 등록되었으며 코디 리스트에 즉시 반영되었습니다!"); 
+                    document.getElementById("brandName").value = ""; // 입력칸 리셋
                 }
             });
 
