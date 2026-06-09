@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>AI 스마트 전신 코디룸 (GitHub-GAS 연동)</title>
+    <title>AI 스마트 전신 코디룸</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -17,13 +17,12 @@
             </div>
             
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-3">
-                <h3 class="text-sm font-bold text-emerald-600">+ 코디할 옷 선택 후 저장하기</h3>
+                <h3 class="text-sm font-bold text-emerald-600">+ 코디할 옷 선택하기</h3>
                 <div class="grid grid-cols-3 gap-2 text-xs">
                     <select id="mainCategory" class="p-2 border rounded-lg bg-white"><option>상의</option><option>하의</option><option>아우터</option><option>신발</option></select>
                     <select id="subCategory" class="p-2 border rounded-lg bg-white"><option>반팔 티셔츠</option><option>셔츠</option><option>청바지</option><option>슬랙스</option></select>
                     <select id="color" class="p-2 border rounded-lg bg-white"><option>화이트</option><option>블랙</option><option>네이비</option><option>그레이</option></select>
                 </div>
-                <input type="text" id="clothName" placeholder="옷 이름 직접 입력 (선택사항)" class="w-full p-2 text-xs border rounded-lg">
                 <button onclick="addClothAndSelect()" class="w-full bg-indigo-600 text-white text-xs font-bold p-3 rounded-lg hover:bg-indigo-700 shadow-sm">
                     <i class="fa-solid fa-square-plus"></i> 이 옷을 내 옷장에 저장 및 코디에 바로 추가
                 </button>
@@ -66,23 +65,20 @@
 
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwskKdflzq3DctssiwIUXgn0T9YFUuKQdsvvKLk80SDi-2jmMsFW6A6Jwsh_84ZuSA3/exec";
 
-        // 선택된 옷들을 임시 보관할 배열
         let selectedClothes = [];
 
-        // 옷을 저장함과 동시에 오른쪽 코디 리스트에 바로 집어넣는 핵심 함수
         function addClothAndSelect() {
             const main = document.getElementById("mainCategory").value;
             const sub = document.getElementById("subCategory").value;
             const col = document.getElementById("color").value;
-            const name = document.getElementById("clothName").value || sub;
             
-            const fullClothText = `[${main}] ${col} ${name}`;
+            // 귀찮은 입력창 대신 선택한 정보 조합으로 이름 자동 생성!
+            const fullClothText = `[${main}] ${col} ${sub}`;
 
             // 1. 파이어베이스에 데이터 저장
-            db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: name }, function(err) {
+            db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: sub }, function(err) {
                 if(!err) { 
                     alert("의류가 옷장에 등록되었으며 코디 리스트에 즉시 반영되었습니다!"); 
-                    document.getElementById("clothName").value = ""; 
                 }
             });
 
@@ -91,7 +87,6 @@
             updateSelectedUI();
         }
 
-        // 우측 코디 매칭 리스트 화면 갱신
         function updateSelectedUI() {
             const box = document.getElementById("selected-list");
             if (selectedClothes.length === 0) {
@@ -111,13 +106,11 @@
             });
         }
 
-        // 특정 옷 코디 리스트에서 제외
         window.removeSelected = function(index) {
             selectedClothes.splice(index, 1);
             updateSelectedUI();
         };
 
-        // 리스트 전체 리셋
         window.clearSelected = function() {
             selectedClothes = [];
             updateSelectedUI();
