@@ -75,24 +75,20 @@
         const db = firebase.database();
         const userId = "qotmdals1234"; 
 
-        // 💡 승민님의 실제 구글 앱스 스크립트 웹앱 주소
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyzEdmfsnN-KkVg7k36TsWsHm2jP2MQT_jujOsvDteFDsPz9loeSs0SSqCLw8wlRj1E/exec";
+        // 🔗 74번째 줄: 새로 배포한 구글 스크립트 주소를 아래 큰따옴표 안에 넣어주세요!
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwJHhUzrS3z5tInItoZr1GOuLNpVDc7KMwsE1otakg2H_TVOPQgFV0-TtkcWFLLr0DM/exec";
 
-        // 카테고리당 10개 이상 데이터 세팅
         const categories = {
-            "상의": ["반팔 티셔츠", "긴팔 티셔츠", "셔츠", "블라우스", "맨투맨", "후드티", "니트", "카라티", "민소매", "베스트(조끼)", "나일론 풀오버"],
+            "상의": ["반팔 티셔츠", "긴팔 티셔츠", "셔츠", "블라우스", "맨투맨", "후드티", "니트", "카라티", "민소매", "베스트(조께)", "나일론 풀오버"],
             "하의": ["청바지", "슬랙스", "면바지(치노)", "트레이닝 팬츠", "조거팬츠", "반바지", "와이드팬츠", "카고팬츠", "롱스커트", "미니스커트", "레깅스"],
             "아우터": ["후드집업", "가디건", "블레이저(자켓)", "데님자켓", "레더자켓", "바람막이", "트러커 자켓", "롱코트", "숏패딩", "롱패딩", "플리스(후리스)"],
             "신발": ["스니커즈", "캔버스화", "러닝슈즈", "더비슈즈", "로퍼", "첼시부츠", "워커", "샌들", "슬리퍼", "블로퍼", "어글리슈즈"]
         };
 
-        // 실시간 소분류 갱신 함수
         function updateSubCategories() {
             const mainVal = document.getElementById("mainCategory").value;
             const subSelect = document.getElementById("subCategory");
-            
             subSelect.innerHTML = "";
-            
             categories[mainVal].forEach(function(item) {
                 const option = document.createElement("option");
                 option.value = item;
@@ -111,11 +107,9 @@
             const main = document.getElementById("mainCategory").value;
             const sub = document.getElementById("subCategory").value;
             const col = document.getElementById("color").value;
-            
             const fullClothText = `[${main}] ${col} ${sub}`;
 
             db.ref('items/' + userId).push({ main: main, sub: sub, color: col, name: sub });
-
             selectedClothes.push(fullClothText);
             updateSelectedUI();
         }
@@ -127,7 +121,6 @@
                 box.innerText = "선택된 옷이 없습니다. 왼쪽에서 옷을 저장해 주세요!";
                 return;
             }
-            
             box.className = "border rounded-xl p-3 min-h-[120px] text-xs text-slate-700 space-y-1 bg-white";
             box.innerHTML = "";
             selectedClothes.forEach((item, index) => {
@@ -149,61 +142,52 @@
             updateSelectedUI();
         };
 
-        // 🛠️ 전송 에러 현상을 완벽하게 예방한 AI 통신 함수
         let lastAIResult = "";
-        function getAIAdvice() {
+        
+        async function getAIAdvice() {
             const q = document.getElementById("question").value.trim();
             if(selectedClothes.length === 0 || !q) {
                 alert("코디할 옷을 저장하고 상황을 입력해 주세요.");
                 return;
             }
 
-            // 분석 중 UI 먼저 띄우기
             document.getElementById("ai-text").innerText = "AI가 코디를 분석하고 있습니다. 잠시만 기다려주세요...";
             document.getElementById("ai-box").classList.remove("hidden");
 
-            // 구글 서버 규격에 맞춘 깔끔한 데이터 전송 방식 (에러 방지)
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    action: "askAI",
-                    clothDetails: selectedClothes.join(", "),
-                    userQuestion: q
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "askAI", clothDetails: selectedClothes.join(", "), userQuestion: q })
+                });
+                
+                const data = await response.json();
+                
                 if (data && data.result) {
                     lastAIResult = data.result;
                     document.getElementById("ai-text").innerText = lastAIResult;
                 } else {
-                    document.getElementById("ai-text").innerText = "AI의 응답 형식이 올바르지 않습니다.";
+                    document.getElementById("ai-text").innerText = "AI의 응답 데이터에 문제가 있습니다.";
                 }
-            })
-            .catch(err => {
+            } catch(err) {
                 console.error(err);
                 document.getElementById("ai-text").innerText = "통신 중 에러가 발생했습니다. 구글 앱스 스크립트 배포 상태를 다시 확인해 주세요.";
-            });
+            }
         }
 
-        function speak() {
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    action: "generateTTS",
-                    text: lastAIResult
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.result) {
+        async function speak() {
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "generateTTS", text: lastAIResult })
+                });
+                const data = await response.json();
+                if(data && data.result) {
                     const audio = new Audio("data:audio/mp3;base64," + data.result);
                     audio.play();
                 }
-            })
-            .catch(err => alert("음성 생성에 실패했습니다."));
+            } catch(e) {
+                alert("음성 파일 생성에 실패했습니다.");
+            }
         }
     </script>
 </body>
